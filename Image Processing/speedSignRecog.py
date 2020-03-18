@@ -1,6 +1,9 @@
 '''
 Author: Gary Kelly - C16380531
 Description: Program to detect speed sign from an image
+Method: 
+Inputs: Original image, copy of original image for displaying output
+Outputs: returns int - 30 OR 50 OR 60 OR 80 OR 100 OR 120 OR None
 '''
 import numpy as np
 import cv2
@@ -15,12 +18,10 @@ Read in templates
 cached_speed_sign_templates = {}
 speed_sign_template_dir = 'Templates/*'
 templates = glob.glob(speed_sign_template_dir)
-#print(templates)
 
 for template_path in templates:
     template = cv2.imread(template_path, 0)
     template_name = template_path[len(speed_sign_template_dir) - 1:-4]
-    #print(template_name)
     cached_speed_sign_templates[template_name] = template
 
     
@@ -37,7 +38,7 @@ def detect_speed_sign(image,outputImage):
     upperMask = cv2.inRange(hsvImage, LowerRedRangeUpper, UpperRedRangeUpper)
     mask = lowerMask + upperMask
 
-    cv2.imshow("mask",mask)
+    #cv2.imshow("mask",mask)
     processed_image = image_processing.process_image(hsvImage,mask,outputImage)
 
     if processed_image is None:
@@ -48,7 +49,9 @@ def detect_speed_sign(image,outputImage):
     processed_image = cv2.cvtColor(processed_image, cv2.COLOR_HSV2BGR)
     processed_image_gray = cv2.cvtColor(processed_image, cv2.COLOR_BGR2GRAY)
     cv2.imshow("sliced",processed_image_gray)
+    
     template_likelihood = {}
+    threshold = 0.1
     for template in cached_speed_sign_templates:
         res = cv2.matchTemplate(processed_image_gray, cached_speed_sign_templates[template], cv2.TM_CCOEFF_NORMED)
         template_likelihood[template] = max(res)
@@ -56,17 +59,7 @@ def detect_speed_sign(image,outputImage):
         
 
     if template_likelihood:
-        return max(template_likelihood, key=template_likelihood.get)
+        if max(template_likelihood) > threshold:
+            return max(template_likelihood, key=template_likelihood.get)
     
-    return 0
-    
-
-
-
-
-def validate_circle(image):
-    '''
-    similar to process_image but uses Hough Circle to validate contour is circular
-    return 1 for circle, 0 for no circle
-    '''
-
+    return None

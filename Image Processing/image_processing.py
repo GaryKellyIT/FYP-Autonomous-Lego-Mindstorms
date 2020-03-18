@@ -8,10 +8,10 @@ import cv2
 import random
 import imutils
 
-#global variables to store position of sliced image for output purposes
-BOUNDING_X = 0
-BOUNDING_Y = 0
 
+'''
+Function to resize image to given dimensions, used for template matching
+'''
 def image_resize(image, width = None, height = None, inter = cv2.INTER_AREA):
             # initialize the dimensions of the image to be resized and
             # grab the image size
@@ -43,12 +43,20 @@ def image_resize(image, width = None, height = None, inter = cv2.INTER_AREA):
             # return the resized image
             return resized
 
-
+'''
+Function to get largest contour from a mask
+'''
 def largest_contour(image):
     contours,_ = cv2.findContours(image, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_NONE)
     contours = sorted(contours, key=cv2.contourArea, reverse=True)
-    return contours[0]
+    if contours:
+        return contours[0]
+    else:
+        return None
 
+'''
+Function to find most similar image from templates
+'''
 def template_matching(image, templates, size):
     template_likelihood = {}
     for template in cached_speed_sign_templates:
@@ -62,10 +70,13 @@ def template_matching(image, templates, size):
     return 0
 
 
+'''
+Function to process image and get smallest bounding box of largest contour
+'''
 def process_image(image, mask, outputImage):
     contours,_ = cv2.findContours(mask, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_NONE)
     contours = sorted(contours, key=cv2.contourArea, reverse=True)
-    
+    #call largest contour
     if contours:
         rect = cv2.minAreaRect(contours[0])
         box = cv2.boxPoints(rect)
@@ -76,25 +87,13 @@ def process_image(image, mask, outputImage):
         return None
 
     slicedImage = crop_minAreaRect(image,rect)
-    '''
-    x = min(TL[0],BL[0])
-    y = min(TL[1],TR[1])
-    w = max(TR[0],BR[0]) - x
-    h = max(BL[0],BR[0]) - y
-    '''
-    x=y=0
-    w=h=50
-    #print(box)
-    global BOUNDING_X
-    global BOUNDING_y
-    BOUNDING_X = x
-    BOUNDING_Y = y
-    
-    #slicedImage = image[y:y+h,x:x+w]
+
 
     return slicedImage
 
-
+'''
+Function to detect traffic light colour being shown
+'''
 def detect_light_colour(processed_image, mask, outputImage):
     resulting_image = cv2.bitwise_and(processed_image, processed_image, mask=mask)
 
@@ -111,6 +110,9 @@ def detect_light_colour(processed_image, mask, outputImage):
         draw_detected_circles(outputImage, circles)
         return 1
 
+'''
+Function to draw detected traffic light colour being shown, called from detect_light_colour()
+'''
 def draw_detected_circles(outputImage, circles):     
     
     if circles is not None:
@@ -120,13 +122,17 @@ def draw_detected_circles(outputImage, circles):
         for (x, y, r) in circles:
             # draw the circle in the output image, then draw a rectangle
             # corresponding to the center of the circle
-            cv2.circle(outputImage, (BOUNDING_X + x, BOUNDING_Y + y), r, (0, 255, 0), 4)
-            cv2.rectangle(outputImage, (BOUNDING_X + x - 5, BOUNDING_Y + y - 5), (BOUNDING_X + x + 5, BOUNDING_Y + y + 5), (0, 128, 255), -1)
+            cv2.circle(outputImage, (x, y), r, (0, 255, 0), 4)
+            cv2.rectangle(outputImage, (x - 5,y - 5), (x + 5,y + 5), (0, 128, 255), -1)
     
     return outputImage
 
 
-
+'''
+Funtion to add salt and pepper noise to image.
+Inputs: image, probability of change (number between 0 and 1)
+Outputs: New image
+'''
 def saltAndPepper(image,prob):
     output = np.zeros(image.shape,np.uint8)
     thres = 1 - prob 
@@ -141,6 +147,11 @@ def saltAndPepper(image,prob):
                 output[i][j] = image[i][j]
     return output
 
+'''
+Function to alter brightness of image
+Inputs: Image, value to change brightness by
+Outputs: New image
+'''
 def alter_brightness(image, value):
     hsvImage = cv2.cvtColor(image,cv2.COLOR_BGR2HSV)
     h, s, v = cv2.split(hsvImage)
@@ -153,18 +164,31 @@ def alter_brightness(image, value):
     output = cv2.cvtColor(hsvImage,cv2.COLOR_HSV2BGR)
     return output
 
+'''
+Function to change orientation of image
+Inputs: Image, angle to change image by
+Outputs: New image
+'''
 def changeOrientation(image,angle):
     rotated = imutils.rotate_bound(image,angle)
     #convert black bg to white bg
     rotated[np.where((rotated==[0,0,0]).all(axis=2))] = [255,255,255]
     return rotated
 
+'''
+Function to fix orientation of image
+Inputs: Image, angle to change image by
+Outputs: New image
+'''
 def fixOrientation(image,angle):
     rotated = imutils.rotate_bound(image,360-angle)
     #convert black bg to white bg
     rotated[np.where((rotated==[0,0,0]).all(axis=2))] = [255,255,255]
     return rotated
 
+'''
+Function to crop rectangle found by minAreaRect function
+'''
 def crop_minAreaRect(img, rect):
 
     # rotate img

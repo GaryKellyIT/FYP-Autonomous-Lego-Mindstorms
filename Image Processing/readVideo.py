@@ -30,38 +30,35 @@ test_images = glob.glob(test_dir)
 for test_image_path in test_images:
     test_image = cv2.imread(test_image_path)
     test_image_name = test_image_path[len(test_dir) - 1:-4]
-    print(test_image_name)
     cached_test_images[test_image_name] = test_image
 
+
+
 '''
-read in video frame by frame
-for every 5th frame / 10th / whatever value - call functions to detect for
-traffic light and stop sign.
+function to read in video from Pi, process video frame by frame checking for detected
+speed signs/ traffic lights and sending the appropriate max speed to lego mindstorms program
 
-traffic light function returns - string - Green / Yellow / Red / None
-Speed Sign function returns - int - 30 / 50 /60 /80 /100 / 120 / -1(No sign detected)
-
-depending on return values send commands to mindstorms
+traffic light function returns - Array - [Green / Yellow / Red] OR None
+Speed Sign function returns - int - 30 OR 50 OR 60 OR 80 OR 100 OR 120 OR None
 '''
 def main():
     global CURRENT_SPEED_LIMIT
     global CURRENT_TRAFFIC_LIGHT
-    print(CURRENT_SPEED_LIMIT)
-    image = cv2.imread("Input/GreenLight.jpg")
+    image = cv2.imread("test/GreenLight.jpg")
     #image = cv2.imread("Templates/30.png")
+    #image = cv2.imread("test.jpg")
     
         
     #image = image_processing.saltAndPepper(image,0.05)
     #image = image_processing.alter_brightness(image,5)
     image = image_processing.changeOrientation(image,10)
     image = image_processing.fixOrientation(image,10)
-    #image = cv2.imread("test.jpg")
-    outputImage = image.copy()
-    outputImage2 = image.copy()
+    DetectedLightBorder = image.copy()
+    DetectedSpeedSign = image.copy()
 
     
-    currentLights = trafficLightRecog.detect_traffic_light(image,outputImage)
-    currentSpeedSign = speedSignRecog.detect_speed_sign(image,outputImage2)
+    currentLights = trafficLightRecog.detect_traffic_light(image,DetectedLightBorder)
+    currentSpeedSign = speedSignRecog.detect_speed_sign(image,DetectedSpeedSign)
 
     
     #Evaluating which light has been detected
@@ -87,14 +84,21 @@ def main():
     print(CURRENT_SPEED_LIMIT)
     print(CURRENT_TRAFFIC_LIGHT)
     
-    cv2.imshow('detected results', outputImage)
-    cv2.imshow('detected results2', outputImage2)
+    cv2.imshow('detected light border', DetectedLightBorder)
+    cv2.imshow('detected speed sign', DetectedSpeedSign)
     key = cv2.waitKey(0)
 
+
+
+
+'''
+Function to loop through directory of images adding noise(salt+pepper, altering
+orientation, altering saturation) and output results to csv file for visualization.
+'''
 def create_csv(images):
     Headings = ['Filename', 'Salt+Pepper', 'Orientation', 'Saturation', 'Green detected', 'Yellow detected', 'Red detected', 'Speed detected']
 
-    image7 = cv2.imread("Traffic Light Recognition/Input/GreenLight.jpg")
+    image7 = cv2.imread("Input/GreenLight.jpg")
     outputImage = image7.copy()
     outputImage2 = image7.copy()
             
@@ -102,7 +106,7 @@ def create_csv(images):
         writer = csv.writer(csvFile)
         writer.writerow(Headings)
         for image in images:
-            for i in np.arange(0,0.5,0.05):
+            for i in np.arange(0,0.25,0.05):
                 
                 Temp = image_processing.saltAndPepper(images[image],i)
                 cv2.imshow('input', Temp)
