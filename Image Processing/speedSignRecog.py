@@ -37,7 +37,7 @@ def detect_speed_sign(image,outputImage):
     upperMask = cv2.inRange(hsvImage, LowerRedRangeUpper, UpperRedRangeUpper)
     mask = lowerMask + upperMask
 
-
+    cv2.imshow("mask",mask)
     processed_image = image_processing.process_image(hsvImage,mask,outputImage)
 
     if processed_image is None:

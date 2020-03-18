@@ -47,12 +47,14 @@ def main():
     global CURRENT_SPEED_LIMIT
     global CURRENT_TRAFFIC_LIGHT
     print(CURRENT_SPEED_LIMIT)
-    image = cv2.imread("Test/test.jpg")
+    image = cv2.imread("Input/GreenLight.jpg")
+    #image = cv2.imread("Templates/30.png")
     
         
-    image = image_processing.saltAndPepper(image,0.05)
+    #image = image_processing.saltAndPepper(image,0.05)
     #image = image_processing.alter_brightness(image,5)
-    image = image_processing.changeOrientation(image,2)
+    image = image_processing.changeOrientation(image,10)
+    image = image_processing.fixOrientation(image,10)
     #image = cv2.imread("test.jpg")
     outputImage = image.copy()
     outputImage2 = image.copy()
@@ -61,7 +63,7 @@ def main():
     currentLights = trafficLightRecog.detect_traffic_light(image,outputImage)
     currentSpeedSign = speedSignRecog.detect_speed_sign(image,outputImage2)
 
-
+    
     #Evaluating which light has been detected
     if currentLights is None:
         print("No lights detected")
@@ -77,11 +79,11 @@ def main():
                 CURRENT_TRAFFIC_LIGHT = "Yellow"
             else:
                 CURRENT_TRAFFIC_LIGHT = "Red"
-
+    
     #Evaluating current speed limit
     if currentSpeedSign != None:
         CURRENT_SPEED_LIMIT = currentSpeedSign
-
+  
     print(CURRENT_SPEED_LIMIT)
     print(CURRENT_TRAFFIC_LIGHT)
     

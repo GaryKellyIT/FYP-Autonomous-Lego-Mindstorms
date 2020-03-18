@@ -65,7 +65,7 @@ def template_matching(image, templates, size):
 def process_image(image, mask, outputImage):
     contours,_ = cv2.findContours(mask, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_NONE)
     contours = sorted(contours, key=cv2.contourArea, reverse=True)
-
+    
     if contours:
         rect = cv2.minAreaRect(contours[0])
         box = cv2.boxPoints(rect)
@@ -75,14 +75,22 @@ def process_image(image, mask, outputImage):
     else:
         return None
 
-    x = y = 0
-    w = h =50
+    slicedImage = crop_minAreaRect(image,rect)
+    '''
+    x = min(TL[0],BL[0])
+    y = min(TL[1],TR[1])
+    w = max(TR[0],BR[0]) - x
+    h = max(BL[0],BR[0]) - y
+    '''
+    x=y=0
+    w=h=50
+    #print(box)
     global BOUNDING_X
     global BOUNDING_y
     BOUNDING_X = x
     BOUNDING_Y = y
     
-    slicedImage = image[y:y+h,x:x+w]
+    #slicedImage = image[y:y+h,x:x+w]
 
     return slicedImage
 
@@ -150,3 +158,29 @@ def changeOrientation(image,angle):
     #convert black bg to white bg
     rotated[np.where((rotated==[0,0,0]).all(axis=2))] = [255,255,255]
     return rotated
+
+def fixOrientation(image,angle):
+    rotated = imutils.rotate_bound(image,360-angle)
+    #convert black bg to white bg
+    rotated[np.where((rotated==[0,0,0]).all(axis=2))] = [255,255,255]
+    return rotated
+
+def crop_minAreaRect(img, rect):
+
+    # rotate img
+    angle = rect[2]
+    rows,cols = img.shape[0], img.shape[1]
+    M = cv2.getRotationMatrix2D((cols/2,rows/2),angle,1)
+    img_rot = cv2.warpAffine(img,M,(cols,rows))
+
+    # rotate bounding box
+    rect0 = (rect[0], rect[1], 0.0) 
+    box = cv2.boxPoints(rect0)
+    pts = np.int0(cv2.transform(np.array([box]), M))[0]    
+    pts[pts < 0] = 0
+
+    # crop
+    img_crop = img_rot[pts[1][1]:pts[0][1], 
+                       pts[1][0]:pts[2][0]]
+
+    return img_crop
