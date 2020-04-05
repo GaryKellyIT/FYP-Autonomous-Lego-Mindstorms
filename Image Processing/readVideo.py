@@ -14,14 +14,9 @@ import speedSignRecog
 import image_processing
 
 
-CURRENT_SPEED_LIMIT = 30
+CURRENT_SPEED_LIMIT = "None"
 CURRENT_TRAFFIC_LIGHT = "None"
 
-#checking for previous files and deleting
-if os.path.exists("imageResults.csv"):
-  os.remove("imageResults.csv")
-else:
-  print("The file does not exist")
 
 cached_test_images = {}
 test_dir = 'Test/*'
@@ -44,15 +39,17 @@ Speed Sign function returns - int - 30 OR 50 OR 60 OR 80 OR 100 OR 120 OR None
 def main():
     global CURRENT_SPEED_LIMIT
     global CURRENT_TRAFFIC_LIGHT
-    image = cv2.imread("test/GreenLight.jpg")
+    image = cv2.imread("Test/RedFar.jpg")
+    #image = image_processing.image_resize(image,500)
     #image = cv2.imread("Templates/30.png")
     #image = cv2.imread("test.jpg")
+
     
         
     #image = image_processing.saltAndPepper(image,0.05)
     #image = image_processing.alter_brightness(image,5)
-    image = image_processing.changeOrientation(image,10)
-    image = image_processing.fixOrientation(image,10)
+    #image = image_processing.changeOrientation(image,0)
+    #image = image_processing.fixOrientation(image,10)
     DetectedLightBorder = image.copy()
     DetectedSpeedSign = image.copy()
 
@@ -80,7 +77,7 @@ def main():
     #Evaluating current speed limit
     if currentSpeedSign != None:
         CURRENT_SPEED_LIMIT = currentSpeedSign
-  
+    
     print(CURRENT_SPEED_LIMIT)
     print(CURRENT_TRAFFIC_LIGHT)
     
@@ -97,8 +94,14 @@ orientation, altering saturation) and output results to csv file for visualizati
 '''
 def create_csv(images):
     Headings = ['Filename', 'Salt+Pepper', 'Orientation', 'Saturation', 'Green detected', 'Yellow detected', 'Red detected', 'Speed detected']
+    #checking for previous files and deleting
+    if os.path.exists("imageResults.csv"):
+      os.remove("imageResults.csv")
+    else:
+      print("The file does not exist")
 
-    image7 = cv2.imread("Input/GreenLight.jpg")
+    
+    image7 = cv2.imread("test/50far.jpg")
     outputImage = image7.copy()
     outputImage2 = image7.copy()
             
@@ -106,30 +109,100 @@ def create_csv(images):
         writer = csv.writer(csvFile)
         writer.writerow(Headings)
         for image in images:
+            images[image] = image_processing.image_resize(images[image],500)
+            print("Starting image:" + image)
             for i in np.arange(0,0.25,0.05):
-                
                 Temp = image_processing.saltAndPepper(images[image],i)
-                cv2.imshow('input', Temp)
-                key = cv2.waitKey(0)
                 currentLights = trafficLightRecog.detect_traffic_light(Temp,outputImage)
                 currentSpeedSign = speedSignRecog.detect_speed_sign(Temp,outputImage2)
-                if currentLights is None:
+
+                if currentLights is None: #No bounding box detected
                     green = yellow = red = 0
                 else:
-                    if sum(currentLights) == 0:
+                    if sum(currentLights) == 0: #No light colour detected
                         green = yellow = red = 0
                     else:
                         if currentLights[0] == 1:
                             green = 1
+                        else:
+                            green = 0
                         if currentLights[1] == 1:
                             yellow = 1
-                        if currentLights[1] == 1:
+                        else:
+                            yellow = 0
+                        if currentLights[2] == 1:
                             red = 1
+                        else:
+                            red = 0
+                            
                 if currentSpeedSign != None:
                     speed = currentSpeedSign
+                else:
+                    speed = "None"
                 row = [image , i,"0","0",green,yellow,red,speed]
                 writer.writerow(row)
-        
+                
+            for j in np.arange(5,30,5):
+                Temp = image_processing.alter_brightness(images[image],j)
+                currentLights = trafficLightRecog.detect_traffic_light(Temp,outputImage)
+                currentSpeedSign = speedSignRecog.detect_speed_sign(Temp,outputImage2)
+
+                if currentLights is None: #No bounding box detected
+                    green = yellow = red = 0
+                else:
+                    if sum(currentLights) == 0: #No light colour detected
+                        green = yellow = red = 0
+                    else:
+                        if currentLights[0] == 1:
+                            green = 1
+                        else:
+                            green = 0
+                        if currentLights[1] == 1:
+                            yellow = 1
+                        else:
+                            yellow = 0
+                        if currentLights[2] == 1:
+                            red = 1
+                        else:
+                            red = 0
+                            
+                if currentSpeedSign != None:
+                    speed = currentSpeedSign
+                else:
+                    speed = "None"
+                row = [image , "0","0",j,green,yellow,red,speed]
+                writer.writerow(row)
+
+            for k in np.arange(2,12,2):
+                Temp = image_processing.changeOrientation(images[image],k)
+                currentLights = trafficLightRecog.detect_traffic_light(Temp,outputImage)
+                currentSpeedSign = speedSignRecog.detect_speed_sign(Temp,outputImage2)
+
+                if currentLights is None: #No bounding box detected
+                    green = yellow = red = 0
+                else:
+                    if sum(currentLights) == 0: #No light colour detected
+                        green = yellow = red = 0
+                    else:
+                        if currentLights[0] == 1:
+                            green = 1
+                        else:
+                            green = 0
+                        if currentLights[1] == 1:
+                            yellow = 1
+                        else:
+                            yellow = 0
+                        if currentLights[2] == 1:
+                            red = 1
+                        else:
+                            red = 0
+                            
+                if currentSpeedSign != None:
+                    speed = currentSpeedSign
+                else:
+                    speed = "None"
+                row = [image , "0",k,"0",green,yellow,red,speed]
+                writer.writerow(row)
 
     csvFile.close()
 
