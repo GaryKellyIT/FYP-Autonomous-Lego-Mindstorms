@@ -189,6 +189,7 @@ def fixOrientation(image,angle):
     rotated[np.where((rotated==[0,0,0]).all(axis=2))] = [255,255,255]
     return rotated
 
+
 '''
 Function to crop rectangle found by minAreaRect function
 '''

@@ -19,7 +19,7 @@ import image_processing
 def detect_traffic_light(image,outputImage):
     
     lowerBlack = np.array([0,0,0])
-    upperBlack = np.array([90,90,90])
+    upperBlack = np.array([90,120,90])
     mask = cv2.inRange(image, lowerBlack, upperBlack)
     #cv2.imshow("Black Mask",mask)
     processed_image = image_processing.process_image(image,mask,outputImage)

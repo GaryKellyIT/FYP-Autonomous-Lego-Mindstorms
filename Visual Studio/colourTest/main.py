@@ -23,7 +23,7 @@ colour_sensor = ColorSensor(Port.S1)
 robot.drive(100, 0)
 
 # Drive forward until an object is detected within 30cm
-while colour_sensor.reflection() > 20:
+while colour_sensor.reflection() < 50:
     print(colour_sensor.reflection())  
 
 #stop

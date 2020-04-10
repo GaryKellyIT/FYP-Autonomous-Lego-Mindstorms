@@ -52,6 +52,7 @@ def detect_speed_sign(image,outputImage):
     closestTemplate = image_processing.template_matching(processed_image_gray, cached_speed_sign_templates, threshold)
     
     if closestTemplate:
+        
         return closestTemplate
     else:
         return None

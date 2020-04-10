@@ -39,17 +39,15 @@ Speed Sign function returns - int - 30 OR 50 OR 60 OR 80 OR 100 OR 120 OR None
 def main():
     global CURRENT_SPEED_LIMIT
     global CURRENT_TRAFFIC_LIGHT
-    image = cv2.imread("Test/RedFar.jpg")
-    #image = image_processing.image_resize(image,500)
-    #image = cv2.imread("Templates/30.png")
-    #image = cv2.imread("test.jpg")
+    image = cv2.imread("Test/GreenClose.jpg")
+    image = image_processing.image_resize(image,500)
 
     
-        
+    #Add Noise - Uncomment to add noise
     #image = image_processing.saltAndPepper(image,0.05)
     #image = image_processing.alter_brightness(image,5)
     #image = image_processing.changeOrientation(image,0)
-    #image = image_processing.fixOrientation(image,10)
+
     DetectedLightBorder = image.copy()
     DetectedSpeedSign = image.copy()
 
@@ -209,4 +207,4 @@ def create_csv(images):
      
 
 main()
-#create_csv(cached_test_images)
+#create_csv(cached_test_images) #Uncomment to recreate csv file
