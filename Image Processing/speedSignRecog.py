@@ -36,23 +36,19 @@ def detect_speed_sign(image,outputImage):
     upperMask = cv2.inRange(hsvImage, UpperRedRangeLower, UpperRedRangeUpper)
     mask = lowerMask + upperMask
 
-    #cv2.imshow("mask",mask)
     processed_image = image_processing.process_image(image,mask,outputImage)
 
     if processed_image is None:
         return None
     
     processed_image = image_processing.image_resize(processed_image,138,138)
-
-    #processed_image = cv2.cvtColor(processed_image, cv2.COLOR_HSV2BGR)
     processed_image_gray = cv2.cvtColor(processed_image, cv2.COLOR_BGR2GRAY)
-    #cv2.imshow("sliced",processed_image_gray)
 
     threshold = 0.1
-    closestTemplate = image_processing.template_matching(processed_image_gray, cached_speed_sign_templates, threshold)
+    closestTemplate = image_processing.template_matching(processed_image_gray,
+                                cached_speed_sign_templates, threshold)
     
     if closestTemplate:
-        
         return closestTemplate
     else:
         return None

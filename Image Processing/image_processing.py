@@ -105,7 +105,8 @@ def detect_light_colour(processed_image, mask, outputImage):
 
     grayscale_image = cv2.GaussianBlur(grayscale_image, (5, 5), 0)
     
-    circles = cv2.HoughCircles(grayscale_image, cv2.HOUGH_GRADIENT, 1, 80, param1 = 50, param2 = 18, minRadius = 15, maxRadius = 70)
+    circles = cv2.HoughCircles(grayscale_image, cv2.HOUGH_GRADIENT, 1, 80, param1 = 50,
+                               param2 = 18, minRadius = 15, maxRadius = 70)
 
     if circles is None:
         return 0
@@ -126,7 +127,8 @@ def draw_detected_circles(outputImage, circles):
             # draw the circle in the output image, then draw a rectangle
             # corresponding to the center of the circle
             cv2.circle(outputImage, (BOUNDING_X + x, BOUNDING_Y + y), r, (0, 255, 0), 4)
-            cv2.rectangle(outputImage, (BOUNDING_X + x - 5,BOUNDING_Y + y - 5), (BOUNDING_X + x + 5,BOUNDING_Y + y + 5), (0, 128, 255), -1)
+            cv2.rectangle(outputImage, (BOUNDING_X + x - 5,BOUNDING_Y + y - 5),
+                          (BOUNDING_X + x + 5,BOUNDING_Y + y + 5), (0, 128, 255), -1)
     
     return outputImage
 
@@ -190,29 +192,3 @@ def fixOrientation(image,angle):
     return rotated
 
 
-'''
-Function to crop rectangle found by minAreaRect function
-'''
-def crop_minAreaRect(img, rect):
-
-    # rotate img
-    angle = rect[2]
-    rows,cols = img.shape[0], img.shape[1]
-
-    M = cv2.getRotationMatrix2D((cols/2,rows/2),angle,1)
-    img_rot = cv2.warpAffine(img,M,(cols,rows))
-
-    cv2.imshow("img_rot",img_rot)
-    key = cv2.waitKey(0)
-    print(rect)
-    # rotate bounding box
-    rect0 = (rect[0], rect[1], 0.0) 
-    box = cv2.boxPoints(rect0)
-    pts = np.int0(cv2.transform(np.array([box]), M))[0]    
-    #pts[pts < 0] = 0
-    print(pts)
-    # crop
-    img_crop = img_rot[pts[1][1]:pts[0][1], 
-                       pts[1][0]:pts[2][0]]
-
-    return img_crop

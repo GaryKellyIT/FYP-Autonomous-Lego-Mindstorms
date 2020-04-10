@@ -8,7 +8,6 @@ import cv2
 import glob
 import csv
 import os
-
 import trafficLightRecog
 import speedSignRecog
 import image_processing
@@ -17,18 +16,6 @@ import image_processing
 CURRENT_SPEED_LIMIT = "None"
 CURRENT_TRAFFIC_LIGHT = "None"
 
-
-cached_test_images = {}
-test_dir = 'Test/*'
-test_images = glob.glob(test_dir)
-
-for test_image_path in test_images:
-    test_image = cv2.imread(test_image_path)
-    test_image_name = test_image_path[len(test_dir) - 1:-4]
-    cached_test_images[test_image_name] = test_image
-
-
-
 '''
 function to read in video from Pi, process video frame by frame checking for detected
 speed signs/ traffic lights and sending the appropriate max speed to lego mindstorms program
@@ -36,21 +23,14 @@ speed signs/ traffic lights and sending the appropriate max speed to lego mindst
 traffic light function returns - Array - [Green / Yellow / Red] OR None
 Speed Sign function returns - int - 30 OR 50 OR 60 OR 80 OR 100 OR 120 OR None
 '''
-def main():
+def ImageDetect():
     global CURRENT_SPEED_LIMIT
     global CURRENT_TRAFFIC_LIGHT
     image = cv2.imread("Test/GreenClose.jpg")
     image = image_processing.image_resize(image,500)
 
-    
-    #Add Noise - Uncomment to add noise
-    #image = image_processing.saltAndPepper(image,0.05)
-    #image = image_processing.alter_brightness(image,5)
-    #image = image_processing.changeOrientation(image,0)
-
     DetectedLightBorder = image.copy()
     DetectedSpeedSign = image.copy()
-
     
     currentLights = trafficLightRecog.detect_traffic_light(image,DetectedLightBorder)
     currentSpeedSign = speedSignRecog.detect_speed_sign(image,DetectedSpeedSign)
@@ -84,6 +64,88 @@ def main():
     key = cv2.waitKey(0)
 
 
+
+def VideoDetect():
+    global CURRENT_SPEED_LIMIT
+    global CURRENT_TRAFFIC_LIGHT
+    cap = cv2.VideoCapture("Videos/test.mp4")          # load the video
+
+    # Default resolutions of the frame are obtained.The default resolutions are system dependent.
+    # We convert the resolutions from float to integer.
+    frame_width = int(cap.get(3))
+    frame_height = int(cap.get(4))
+     
+    # Define the codec and create VideoWriter object.The output is stored in 'outpy.avi' file.
+    out = cv2.VideoWriter('Output/DetectedLights.mp4',cv2.VideoWriter_fourcc('M','J','P','G'), 30, (frame_width,frame_height))
+
+    # Define the codec and create VideoWriter object.The output is stored in 'outpy.avi' file.
+    out2 = cv2.VideoWriter('Output/DetectedSpeed.mp4',cv2.VideoWriter_fourcc('M','J','P','G'), 30, (frame_width,frame_height))
+
+
+    while(cap.isOpened()):                    # play the video by reading frame by frame
+        ret, frame = cap.read()
+        if ret==True:
+            image = frame
+            
+
+            DetectedLightBorder = image.copy()
+            DetectedSpeedSign = image.copy()
+
+            
+            currentLights = trafficLightRecog.detect_traffic_light(image,DetectedLightBorder)
+            currentSpeedSign = speedSignRecog.detect_speed_sign(image,DetectedSpeedSign)
+
+            
+            #Evaluating which light has been detected
+            if currentLights is None:
+                print("No lights detected")
+            else:
+                if sum(currentLights) > 1:
+                    print("Multiple lights detected. Slowing down!")
+                elif sum(currentLights) == 0:
+                    print("No lights detected")
+                else:
+                    if currentLights[0] == 1:
+                        CURRENT_TRAFFIC_LIGHT = "Green"
+                    elif currentLights[1] == 1:
+                        CURRENT_TRAFFIC_LIGHT = "Yellow"
+                    else:
+                        CURRENT_TRAFFIC_LIGHT = "Red"
+            
+            #Evaluating current speed limit
+            if currentSpeedSign != None:
+                CURRENT_SPEED_LIMIT = currentSpeedSign
+            
+            print(CURRENT_SPEED_LIMIT)
+            print(CURRENT_TRAFFIC_LIGHT)
+            
+            cv2.imshow('detected light border', DetectedLightBorder)
+            cv2.imshow('detected speed sign', DetectedSpeedSign)
+
+            out.write(DetectedLightBorder)
+            out2.write(DetectedSpeedSign)
+        
+                          
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+        else:
+            break
+
+    # When everything done, release the video capture and video write objects
+    cap.release()
+    out.release()
+    out2.release()
+
+
+
+cached_test_images = {}
+test_dir = 'Test/*'
+test_images = glob.glob(test_dir)
+
+for test_image_path in test_images:
+    test_image = cv2.imread(test_image_path)
+    test_image_name = test_image_path[len(test_dir) - 1:-4]
+    cached_test_images[test_image_name] = test_image
 
 
 '''
@@ -206,5 +268,6 @@ def create_csv(images):
 
      
 
-main()
+ImageDetect()
+#VideoDetect()
 #create_csv(cached_test_images) #Uncomment to recreate csv file
